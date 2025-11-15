@@ -39,7 +39,7 @@ export default function LandingPage() {
             </nav>
             <div className="flex items-center space-x-4">
               <Link
-                href="/signin"
+                href="/login"
                 className="text-gray-600 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
               >
                 Connexion
@@ -459,4 +459,4 @@ export default function LandingPage() {
       </footer>
     </div>
   );
-} 
+}

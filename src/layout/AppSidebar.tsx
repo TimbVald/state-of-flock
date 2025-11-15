@@ -1,9 +1,10 @@
 "use client";
-import React, { useEffect, useRef, useState,useCallback } from "react";
+import React, { useEffect, useRef, useState,useCallback, useMemo } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { useSidebar } from "../context/SidebarContext";
+import { useAuth } from "@/context/AuthContext";
 import {
   BoxCubeIcon,
   CalenderIcon,
@@ -26,76 +27,28 @@ type NavItem = {
   subItems?: { name: string; path: string; pro?: boolean; new?: boolean }[];
 };
 
-const navItems: NavItem[] = [
-  {
-    icon: <GridIcon />,
-    name: "Dashboard",
-    subItems: [{ name: "Ecommerce", path: "/", pro: false }],
-  },
-  {
-    icon: <CalenderIcon />,
-    name: "Calendar",
-    path: "/calendar",
-  },
-  {
-    icon: <UserCircleIcon />,
-    name: "User Profile",
-    path: "/profile",
-  },
+const baseNavItems: NavItem[] = [
+  { icon: <GridIcon />, name: "Dashboard", path: "/dashboard" },
+  { icon: <UserCircleIcon />, name: "Members", path: "/members" },
+  { icon: <CalenderIcon />, name: "Attendance", path: "/attendance" },
+  { icon: <ListIcon />, name: "Follow-up", path: "/follow-up" },
+  { icon: <TableIcon />, name: "Reports", path: "/reports" },
+]
 
+const adminItems: NavItem[] = [
   {
-    name: "Forms",
-    icon: <ListIcon />,
-    subItems: [{ name: "Form Elements", path: "/form-elements", pro: false }],
-  },
-  {
-    name: "Tables",
-    icon: <TableIcon />,
-    subItems: [{ name: "Basic Tables", path: "/basic-tables", pro: false }],
-  },
-  {
-    name: "Pages",
+    name: "Admin",
     icon: <PageIcon />,
     subItems: [
-      { name: "Blank Page", path: "/blank", pro: false },
-      { name: "404 Error", path: "/error-404", pro: false },
+      { name: "Users", path: "/admin/users", pro: false },
+      { name: "Settings", path: "/admin/settings", pro: false },
     ],
   },
-];
-
-const othersItems: NavItem[] = [
-  {
-    icon: <PieChartIcon />,
-    name: "Charts",
-    subItems: [
-      { name: "Line Chart", path: "/line-chart", pro: false },
-      { name: "Bar Chart", path: "/bar-chart", pro: false },
-    ],
-  },
-  {
-    icon: <BoxCubeIcon />,
-    name: "UI Elements",
-    subItems: [
-      { name: "Alerts", path: "/alerts", pro: false },
-      { name: "Avatar", path: "/avatars", pro: false },
-      { name: "Badge", path: "/badge", pro: false },
-      { name: "Buttons", path: "/buttons", pro: false },
-      { name: "Images", path: "/images", pro: false },
-      { name: "Videos", path: "/videos", pro: false },
-    ],
-  },
-  {
-    icon: <PlugInIcon />,
-    name: "Authentication",
-    subItems: [
-      { name: "Sign In", path: "/signin", pro: false },
-      { name: "Sign Up", path: "/signup", pro: false },
-    ],
-  },
-];
+]
 
 const AppSidebar: React.FC = () => {
   const { isExpanded, isMobileOpen, isHovered, setIsHovered } = useSidebar();
+  const { role } = useAuth();
   const pathname = usePathname();
 
   const renderMenuItems = (
@@ -233,14 +186,13 @@ const AppSidebar: React.FC = () => {
   );
   const subMenuRefs = useRef<Record<string, HTMLDivElement | null>>({});
 
-  // const isActive = (path: string) => path === pathname;
    const isActive = useCallback((path: string) => path === pathname, [pathname]);
 
   useEffect(() => {
     // Check if the current path matches any submenu item
     let submenuMatched = false;
     ["main", "others"].forEach((menuType) => {
-      const items = menuType === "main" ? navItems : othersItems;
+      const items = menuType === "main" ? computedMain : computedOthers;
       items.forEach((nav, index) => {
         if (nav.subItems) {
           nav.subItems.forEach((subItem) => {
@@ -287,6 +239,22 @@ const AppSidebar: React.FC = () => {
       return { type: menuType, index };
     });
   };
+
+  const computedMain: NavItem[] = useMemo(() => {
+    if (role === "Bishop") return [...baseNavItems]
+    if (role === "DataClerk") return baseNavItems.filter((i) => i.name !== "Follow-up")
+    return baseNavItems.filter((i) => i.name !== "Reports")
+  }, [role])
+
+  const computedOthers: NavItem[] = useMemo(() => {
+    if (role === "Bishop") return adminItems
+    if (role === "DataClerk") return [{
+      name: "Admin",
+      icon: <PageIcon />,
+      subItems: [{ name: "Settings", path: "/admin/settings", pro: false }],
+    }]
+    return []
+  }, [role])
 
   return (
     <aside
@@ -353,7 +321,7 @@ const AppSidebar: React.FC = () => {
                   <HorizontaLDots />
                 )}
               </h2>
-              {renderMenuItems(navItems, "main")}
+              {renderMenuItems(computedMain, "main")}
             </div>
 
             <div className="">
@@ -370,7 +338,7 @@ const AppSidebar: React.FC = () => {
                   <HorizontaLDots />
                 )}
               </h2>
-              {renderMenuItems(othersItems, "others")}
+              {renderMenuItems(computedOthers, "others")}
             </div>
           </div>
         </nav>
