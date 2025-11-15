@@ -29,6 +29,7 @@ type NavItem = {
 
 const baseNavItems: NavItem[] = [
   { icon: <GridIcon />, name: "Dashboard", path: "/dashboard" },
+  { icon: <PageIcon />, name: "Zones", path: "/zones" },
   { icon: <UserCircleIcon />, name: "Members", path: "/members" },
   { icon: <CalenderIcon />, name: "Attendance", path: "/attendance" },
   { icon: <ListIcon />, name: "Follow-up", path: "/follow-up" },
